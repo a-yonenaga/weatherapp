@@ -1,0 +1,30 @@
+<h1>お天気アプリ</h1>
+<form>
+  <select name='area'>
+    <option value=''>東京</option>
+  </select>
+<form><br />
+
+<div id='main'>
+  <div class='main_item'>Yesterday</div>
+  <div class='main_item'>Today<br />
+  <img src='<%= @icon %>' /><br />
+  <span><%= @temp_max %><br /><%= @temp_min %></span>
+  </div>
+  <div class='main_item'>Tomorrow</div>
+  <div class='empty'></div>
+</div>
+<div id='rain'>
+  <p>Rain prediction here.</p>
+</div>
+<div class='empty'></div>
+<div id='weekly'>
+  <p>Weekly forecast here.</p>
+  <div class='weekly_item'>1<br />aa<br />bb</div>
+  <div class='weekly_item'>2</div>
+  <div class='weekly_item'>3</div>
+  <div class='weekly_item'>4</div>
+  <div class='weekly_item'>5</div>
+  <div class='weekly_item'>6</div>
+  <div class='weekly_item'>7</div>
+</div>
