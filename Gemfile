@@ -8,7 +8,9 @@ end
 # HERE IS ADDITION.
 gem 'faraday'
 #gem 'bootstrap', '~> 4.1.1'
-#gem 'jquery-rails'
+gem 'jquery-rails'
+gem 'bootstrap-sass', '~> 3.3.6'
+#gem 'sass-rails', '>= 3.2'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '~> 5.1.6'
