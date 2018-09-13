@@ -52,10 +52,12 @@
 
 <div id='weekly'>
   <div class='container-fluid'><div class='row weekly'>
-    <% (1..7).each do |i| %>
+    <% (0..4).each do |i| %>
     <div class='col-sm-1'><div class='panel panel-default'>
       <div class='panel-heading'><%= (Date.today + i).strftime("%m/%d") %></div>
-      <div class='panel-body'><img src='/icon/01d.png' /><br /><span class='max'>100℃</span><br /><span class='min'>0℃</span></div>
+      <div class='panel-body'><img src='<%= @list[i][:icon] %>' /><br />
+      <span class='max'><%= @list[i][:temp_max] %></span><br />
+      <span class='min'><%= @list[i][:temp_min] %></span></div>
     </div></div>
     <% end %>
     <div class='col-sm-5'></div>
@@ -63,3 +65,4 @@
 
 </div>
 </div>
+
