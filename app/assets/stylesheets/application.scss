@@ -15,7 +15,6 @@
  @import "bootstrap-sprockets";
  @import "bootstrap";
 
- .weekly .col-sm-1 { padding: 0 2px;}
  .main {
     margin: 0 -40px;
     display: flex;
@@ -23,8 +22,21 @@
       height: 90%;
     }
   }
+
+ .weekly {
+    margin: 0 -40px;
+  }
+
  .min { color: #428bca; font-weight: bold;}
  .max { color: #d9534f; font-weight: bold;}
  .prec { font-weight: bold;
     .prec-icon { margin-right: 4px;}
   }
+
+  .week{
+    position: relative;   
+    width: 14.2%;
+    float: left;
+    padding: 2px;
+  }
+
