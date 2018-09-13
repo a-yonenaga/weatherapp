@@ -3,35 +3,51 @@ require 'json'
 require 'date'
 
 class WelcomeController < ApplicationController
-  API_EP = "http://api.openweathermap.org/data/2.5/"
-  API_KEY = "6327f39f74c32285bc13da99ea6c7193"
+  API_EP = "https://api.darksky.net/forecast/a7daf8b068803135c5f0b7eae0397955/"
 
-  @raw
-  def get_data(q, type = :weather)
-    #type := :weather or :forecast
-    res = Faraday.get API_EP + type.to_s, {'q' => 'Tokyo', 'units' => 'metric', 'APPID' => API_KEY}
-    @raw = res.body
-    JSON.parse(res.body)
+  def get_data(lat, lon, type = :daily)
+    res = Faraday.get "#{API_EP}#{lat},#{lon}", {'units' => 'si'}
+    JSON.parse(res.body)[type.to_s]['data']
+  end
+
+  def get_yest_data(lat, lon)
+    time_serial = Time.mktime(Time.now.year, Time.now.month, Time.now.day - 1).to_i
+    res = Faraday.get "#{API_EP}#{lat},#{lon},#{time_serial.to_s}", {'units' => 'si'}
+    res = JSON.parse(res.body)['daily']['data']
+    res.each do |rec|
+      return rec if rec['time'].to_i == time_serial
+    end
   end
 
   def index
     @area = 'Tokyo'
-    data = get_data(@area, :weather)
+    @point = [35.41, 139.41]
+    data = get_data(*@point,:daily)
 
-    @icon = "/icon/#{data['weather'][0]['icon']}.png"
-    @temp_max = "#{data['main']['temp_max']}℃"
-    @temp_min = "#{data['main']['temp_min']}℃"
-
-    @list = Array.new(5){|hash| hash = Hash.new}
-
-    data = get_data(@area, :forecast)
-    (0..4).each do |i|
-      @list[i][:icon] = "/icon/#{data['list'][i*8]['weather'][0]['icon']}.png"
-      @list[i][:temp_max] = "#{(0..7).map{|j| data['list'][i+j]['main']['temp_max'].to_f}.max}℃"
-      @list[i][:temp_min] = "#{(0..7).map{|j| data['list'][i+j]['main']['temp_min'].to_f}.min}℃"
+    @list = Array.new(7){|i| Hash.new}
+    (0..6).each do |i|
+      begin
+        @list[i][:icon] = "/icon/#{data[i]['icon']}.png"
+        @list[i][:prec] = "#{(data[i]['precipProbability']*100).to_f}%"
+        @list[i][:max] = "#{data[i]['temperatureHigh']}℃"
+        @list[i][:min] = "#{data[i]['temperatureLow']}℃"
+      rescue
+        raise i.to_s + data[i].to_s
+      end
     end
 
-    
+    data = get_data(*@point, :hourly)
+    @graph = Hash.new(8)
+    (0..7).each do |i|
+      @graph[Time.at(data[i*6]['time'].to_i).strftime("%d日 %H:00")] = data[i*6]['precipProbability']
+    end
+
+    data = get_yest_data(*@point)
+    @yest = Hash.new
+    @yest[:icon] = "/icon/#{data['icon']}.png"
+    @yest[:max] = "#{data['temperatureHigh']}℃"
+    @yest[:min] = "#{data['temperatureLow']}℃"
+
     render "welcome/index"
   end
 
