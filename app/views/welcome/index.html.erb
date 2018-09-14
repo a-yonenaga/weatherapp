@@ -4,10 +4,16 @@
 <div class='panel-heading'>
 
 <form>
-  <select name='area' class="form-control">
-    <option value=''>東京</option>
+  <select id='q' onChange='window.location.href="./" + this.value' class='form-control'>
+  <% @pref_list.each_with_index do |pref, i| %>
+    <option value='<%= i %>'><%= pref %></option>
+  <% end %>
   </select>
-<form><br />
+<form>
+<script>
+  $("#q").val(<%= "#{@area}".to_json.html_safe %>);
+</script>
+<br />
 
 </div>
 <div class='panel-body'>
@@ -26,7 +32,7 @@
             </div>
           </div></div>
           <div class='col-sm-6'><div class='panel panel-primary'>
-            <div class='panel-heading'>今日（<%= (Date.today).strftime("%m月%d日") %>）</div>
+            <div class='panel-heading'>今日（<%= (Date.today).strftime("%-m月%-d日") %>）</div>
             <div class='panel-body'>
               <div class='container-fluid'><div class='row'>
                 <div class='col-sm-7'>
@@ -53,7 +59,7 @@
           <div class='container-fluid'><div class='row weekly'>
             <% (0..6).each do |i| %>
             <div class='panel panel-default week'>
-              <div class='panel-heading'><%= (Date.today + i).strftime("%m/%d") %></div>
+              <div class='panel-heading'><%= (Date.today + i).strftime("%-m/%-d") %></div>
               <div class='panel-body'><img src='<%= @list[i][:icon] %>' /><br />
               <span class='max'><%= @list[i][:max] %></span><br />
               <span class='min'><%= @list[i][:min] %></span></div>
@@ -65,7 +71,8 @@
       </div>
     </div>
     <div class='col-sm-5'>
-      <canvas id='myChart' height='200'></canvas>
+      <div><span class='prec'><img src='/image/img02.png' class='prec-icon'/><%= @graph.values[0] * 100 %>%</span>（<%= Time.now.strftime("%-m/%-d %-H:00") %>）</div>
+      <canvas id='myChart' height='200' style='margin-top: 10px;'></canvas>
       <script>
         var ctx = document.getElementById("myChart").getContext('2d');
         var myChart = new Chart(ctx, {
@@ -84,6 +91,27 @@
             title:  {
               display: false,
               text: "タイトル"
+            },
+            scales: {
+              xAxes: [{
+                display: true,
+                stacked: false,
+                gridLines: {
+                  display: false
+                }
+              }],
+              yAxes: [{
+                gridLines: {
+                  drawBorder: false
+                },
+                ticks: {
+                  beginAtZero: true,
+                  max: 100
+                }
+              }]
+            },
+            legend: {
+              display: false
             }
           }
         });
