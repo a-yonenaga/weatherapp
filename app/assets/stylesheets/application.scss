@@ -17,7 +17,6 @@
 
  .main {
     margin: 0 -40px;
-    display: flex;
     .panel {
       height: 90%;
     }
@@ -33,10 +32,25 @@
     .prec-icon { margin-right: 4px;}
   }
 
-  .week{
-    position: relative;   
-    width: 14.2%;
-    float: left;
-    padding: 2px;
+  .nar { padding-left: 2px;
+    padding-right: 2px;
   }
+
+  @media (min-width: 768px) {
+    .week{
+      position: relative;   
+      width: 14.2%;
+      float: left;
+      padding: 2px;
+    }
+  }
+  @media (max-width: 767px) {
+    .week{
+      position: relative;
+      width: 25%;
+      float: left;
+      padding: 2px;
+    }
+  }
+
 

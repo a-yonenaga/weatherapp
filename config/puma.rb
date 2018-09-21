@@ -14,6 +14,14 @@ port        ENV.fetch("PORT") { 3000 }
 # Specifies the `environment` that Puma will run in.
 #
 environment ENV.fetch("RAILS_ENV") { "development" }
+if "development" == ENV.fetch("RAILS_ENV") { "development" }
+  ssl_bind '0.0.0.0', '9292', {
+    key: "./cert.key",
+    cert: "./cert.crt",
+    verify_mode: "none"
+  }
+end
+
 
 # Specifies the number of `workers` to boot in clustered mode.
 # Workers are forked webserver processes. If using threads and workers together

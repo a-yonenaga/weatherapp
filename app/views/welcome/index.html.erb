@@ -4,14 +4,102 @@
 <div class='panel-heading'>
 
 <form>
-  <select id='q' onChange='window.location.href="./" + this.value' class='form-control'>
-  <% @pref_list.each_with_index do |pref, i| %>
-    <option value='<%= i %>'><%= pref %></option>
+  <select id='p' class='form-control'>
+  <% @pref_list.each do |pref| %>
+    <option value='<%= pref %>'><%= pref %></option>
   <% end %>
   </select>
-<form>
+  <select id='c' onChange='Window.alert("<")' class='form-control'>
+    <option>未選択</option>
+  </select>
+</form>
+<form style='margin-top: 8px;'>
+  <input type='button' value='現在地を取得' id='loc' />
+</form>
 <script>
-  $("#q").val(<%= "#{@area}".to_json.html_safe %>);
+  $(function() {
+  $("#loc").click(function() {
+    if ( navigator.geolocation ){
+        navigator.geolocation.getCurrentPosition(
+        function(position){
+          lat = position.coords.latitude;
+          lon = position.coords.longitude;
+          coord = lat + ',' + lon;
+          window.location.href='../coord,' + coord;
+        },
+        function(err){
+          window.alert(err.code + "," + err.message);
+        },
+        {
+          "enableHighAccuracy": false,
+          "timeout": 10000,
+          "maximumAge": 2000
+        }
+      );
+    } else {
+      window.alert('位置情報が取得できません。');
+    }  
+  });
+
+  //同じもの並列、非常に冗長。
+  $("#p").val(<%= "#{@pref}".to_json.html_safe %>);
+  $.getJSON('https://geoapi.heartrails.com/api/json?jsonp=?',
+    {
+      method: 'getCities',
+      prefecture: p.value
+    }
+  )
+  // 結果を取得したら…
+  .done(function(data) {
+    if (data.response) {
+      var result = data.response.location;
+      for(var i=0;i<result.length;i++){
+        let op = document.createElement("option");
+        op.value= result[i].city;
+        op.text = result[i].city;
+        document.getElementById("c").appendChild(op);
+      }
+    } else {
+      window.alert(data.response);
+    }
+  $("#c").val(<%= "#{@city}".to_json.html_safe %>);
+  });
+  $('#p').change(function() {
+    sl = document.getElementById('c');
+    while(sl.lastChild){
+      sl.removeChild(sl.lastChild);
+    }
+    op = document.createElement("option");
+    op.value = '未選択';
+    op.text = '未選択';
+    document.getElementById("c").appendChild(op);
+
+    $.getJSON('https://geoapi.heartrails.com/api/json?jsonp=?',
+      {
+        method: 'getCities',
+        prefecture: p.value
+      }
+    )
+    // 結果を取得したら…
+    .done(function(data) {
+      if (data.response) {
+        var result = data.response.location;
+        for(var i=0;i<result.length;i++){
+          let op = document.createElement("option");
+          op.value= result[i].city;
+          op.text = result[i].city;
+          document.getElementById("c").appendChild(op);
+        }
+      } else {
+        window.alert(data.response);
+      }
+    });
+  });
+  $('#c').change(function() {
+    window.location.href='./city,' + p.value + ',' + c.value 
+  });
+  });
+
 </script>
 <br />
 
@@ -23,7 +111,7 @@
     <div class='col-sm-7'>
       <div class='container-fluid'>
         <div class='row main'>
-          <div class='col-sm-3'><div class='panel panel-info'>
+          <div class='col-xs-3 nar'><div class='panel panel-info'>
             <div class='panel-heading'>昨日</div>
             <div class='panel-body'>
               <img src='<%= @yest[:icon] %>' /><br />
@@ -31,22 +119,22 @@
               <span class='min'><%= @yest[:min] %></span>
             </div>
           </div></div>
-          <div class='col-sm-6'><div class='panel panel-primary'>
+          <div class='col-xs-6 nar'><div class='panel panel-primary'>
             <div class='panel-heading'>今日（<%= (Date.today).strftime("%-m月%-d日") %>）</div>
             <div class='panel-body'>
               <div class='container-fluid'><div class='row'>
-                <div class='col-sm-7'>
+                <div class='col-xs-7'>
                   <img src='<%= @list[0][:icon] %>' /><br />
                   <span class='prec'><img src='/image/img02.png' class='prec-icon'/><%= @list[0][:prec] %></span>
                 </div>
-                <div>
+                <div class='col-xs-5'>
                   <span class='max'><%= @list[0][:max] %></span><br />
                   <span class='min'><%= @list[0][:min] %></span>
                 </div>
               </div></div>
             </div>
           </div></div>
-          <div class='col-sm-3'><div class='panel panel-info'>
+          <div class='col-xs-3 nar'><div class='panel panel-info'>
             <div class='panel-heading'>明日</div>
             <div class='panel-body'>
               <img src='<%= @list[1][:icon] %>' /><br />
@@ -55,18 +143,15 @@
             </div>
           </div></div>
         </div>
-        <div id='row'>
-          <div class='container-fluid'><div class='row weekly'>
-            <% (0..6).each do |i| %>
-            <div class='panel panel-default week'>
-              <div class='panel-heading'><%= (Date.today + i).strftime("%-m/%-d") %></div>
-              <div class='panel-body'><img src='<%= @list[i][:icon] %>' /><br />
-              <span class='max'><%= @list[i][:max] %></span><br />
-              <span class='min'><%= @list[i][:min] %></span></div>
-            </div>
-            <% end %>
-            <div class='col-sm-5'></div>
-          </div></div>
+        <div class='row weekly'>
+          <% (0..6).each do |i| %>
+          <div class='panel panel-default week'>
+            <div class='panel-heading'><%= (Date.today + i).strftime("%-m/%-d") %></div>
+            <div class='panel-body'><img src='<%= @list[i][:icon] %>' /><br />
+            <span class='max'><%= @list[i][:max] %></span><br />
+            <span class='min'><%= @list[i][:min] %></span></div>
+          </div>
+          <% end %>
         </div>
       </div>
     </div>
