@@ -4,17 +4,17 @@
 <div class='panel-heading'>
 
 <form>
-  <select id='p' class='form-control'>
+  <select id='p' class='form-control' style='margin: 5px;'>
   <% @pref_list.each do |pref| %>
     <option value='<%= pref %>'><%= pref %></option>
   <% end %>
   </select>
-  <select id='c' onChange='Window.alert("<")' class='form-control'>
+  <select id='c' style='margin: 5px;' class='form-control'>
     <option>未選択</option>
   </select>
 </form>
 <form style='margin-top: 8px;'>
-  <input type='button' value='現在地を取得' id='loc' />
+  <input type='button' value='現在地を取得' id='loc' style='border-radius: 4px;' />
 </form>
 <script>
   function addCities(){
@@ -72,8 +72,7 @@
   });
 
   $('#c').change(function() {
-    addCities();
-    window.location.href='./city,' + p.value + ',' + c.value 
+    if (c.value != '未選択') {window.location.href='./city,' + p.value + ',' + c.value;} 
   });
   $("#p").val(<%= "#{@pref}".to_json.html_safe %>);
   addCities();
