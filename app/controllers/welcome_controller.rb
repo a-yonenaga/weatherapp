@@ -6,27 +6,6 @@ class WelcomeController < ApplicationController
   API_EP = "https://api.darksky.net/forecast/a7daf8b068803135c5f0b7eae0397955/"
   API_CITY_EP = "http://geoapi.heartrails.com/api/json"
 
-  def get_coord(p, c)
-    res = Faraday.get API_CITY_EP, {'method' => 'getTowns', 'city' => c}
-    towns = JSON.parse(res.body)['response']
-    lon = (towns['location'].map{|loc| loc['x'].to_f}.sum) / towns['location'].length
-    lat = (towns['location'].map{|loc| loc['y'].to_f}.sum) / towns['location'].length
-    return [lat, lon]
-  end
-
-  def get_data(lat, lon)
-    res = Faraday.get "#{API_EP}#{lat},#{lon}", {'units' => 'si'}
-    JSON.parse(res.body)
-  end
-
-  def get_yest_data(lat, lon)
-    time_serial = Time.mktime(Time.now.year, Time.now.month, Time.now.day - 1).to_i
-    res = Faraday.get "#{API_EP}#{lat},#{lon},#{time_serial.to_s}", {'units' => 'si', 'exclue' => 'hourly'}
-    res = JSON.parse(res.body)['daily']['data']
-    res.each do |rec|
-      return rec if rec['time'].to_i == time_serial
-    end
-  end
 
   def index
     pref = 0
@@ -81,5 +60,28 @@ class WelcomeController < ApplicationController
     index
   end
 
+  private
+
+  def get_coord(p, c)
+    res = Faraday.get API_CITY_EP, {'method' => 'getTowns', 'city' => c}
+    towns = JSON.parse(res.body)['response']
+    lon = (towns['location'].map{|loc| loc['x'].to_f}.sum) / towns['location'].length
+    lat = (towns['location'].map{|loc| loc['y'].to_f}.sum) / towns['location'].length
+    return [lat, lon]
+  end
+
+  def get_data(lat, lon)
+    res = Faraday.get "#{API_EP}#{lat},#{lon}", {'units' => 'si'}
+    JSON.parse(res.body)
+  end
+
+  def get_yest_data(lat, lon)
+    time_serial = Time.mktime(Time.now.year, Time.now.month, Time.now.day - 1).to_i
+    res = Faraday.get "#{API_EP}#{lat},#{lon},#{time_serial.to_s}", {'units' => 'si', 'exclue' => 'hourly'}
+    res = JSON.parse(res.body)['daily']['data']
+    res.each do |rec|
+      return rec if rec['time'].to_i == time_serial
+    end
+  end
 
 end

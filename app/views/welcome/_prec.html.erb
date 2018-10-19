@@ -1,0 +1,51 @@
+<div>
+  <span class='prec'>
+    <img src='/image/img02.png' class='prec-icon'/>
+    <%= @graph.values[0] * 100 %>%
+  </span>
+  （<%= Time.now.strftime("%-m/%-d %-H:00") %>）
+</div>
+<canvas id='myChart' height='200' style='margin-top: 10px;'></canvas>
+<script>
+  var ctx = document.getElementById("myChart").getContext('2d');
+  var myChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+      labels: <%= @graph.keys.to_json.html_safe %>,
+      datasets: [{
+        label: "降水確率",
+        data: <%= @graph.values.map{|v| v*100} %>,
+        backgroundColor: 'rgba(66, 139, 202, 1.0)',
+        borderColor: 'rgba(66, 139, 202, 1.0)',
+        fill: false
+      }]
+    },
+    options: {
+      title:  {
+        display: false,
+        text: "タイトル"
+      },
+      scales: {
+        xAxes: [{
+          display: true,
+          stacked: false,
+          gridLines: {
+            display: false
+          }
+        }],
+        yAxes: [{
+          gridLines: {
+            drawBorder: false
+          },
+          ticks: {
+            beginAtZero: true,
+            max: 100
+          }
+        }]
+      },
+      legend: {
+        display: false
+      }
+    }
+  });
+</script>

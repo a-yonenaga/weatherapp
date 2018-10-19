@@ -1,0 +1,12 @@
+<% (0..6).each do |i| %>
+  <div class='panel panel-default week'>
+    <div class='panel-heading'>
+      <%= (Date.today + i).strftime("%-m/%-d") %>
+    </div>
+    <div class='panel-body'>
+      <img src='<%= @list[i][:icon] %>' /><br />
+      <span class='max'><%= @list[i][:max] %></span><br />
+      <span class='min'><%= @list[i][:min] %></span>
+    </div>
+  </div>
+<% end %>
