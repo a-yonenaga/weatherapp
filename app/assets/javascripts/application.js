@@ -16,3 +16,70 @@
 //= require jquery
 //= require bootstrap-sprockets
 //= require Chart.min
+
+ 
+  function addCities(){
+    $.getJSON('https://geoapi.heartrails.com/api/json?jsonp=?',
+      {
+        method: 'getCities',
+        prefecture: p.value
+      }
+    )
+    .done(function(data) {
+      if (data.response) {
+        var result = data.response.location;
+        for(var i=0;i<result.length;i++){
+          let op = document.createElement("option");
+          op.value= result[i].city;
+          op.text = result[i].city;
+          document.getElementById("c").appendChild(op);
+        }
+      } else {
+        window.alert("APIの接続に失敗しました。");
+      }
+    });
+  }
+
+  $(function() {
+  $("#loc").click(function() {
+    if ( navigator.geolocation ){
+        navigator.geolocation.getCurrentPosition(
+        function(position){
+          coord = position.coords.latitude + ',' + position.coords.longitude;
+          window.location.href='../coord,' + coord;
+        },
+        function(err){
+          window.alert("位置情報が取得できませんでした。\n(" + err.code + "," + err.message + ")");
+        },
+        {
+          "enableHighAccuracy": false,
+          "timeout": 8000,
+          "maximumAge": 2000
+        }
+      );
+    } else {
+      window.alert('位置情報が取得できないブラウザです。');
+    }  
+  });
+
+  $('#p').change(function() {
+    sl = document.getElementById('c');
+    while(sl.lastChild){ sl.removeChild(sl.lastChild); }
+    op = document.createElement("option");
+    op.value = '未選択';
+    op.text = '未選択';
+    document.getElementById("c").appendChild(op);
+    addCities();
+  });
+
+  $('#c').change(function() {
+    if (c.value != '未選択') {window.location.href='./city,' + p.value + ',' + c.value;} 
+  });
+  $("#p").val(<%= "#{@pref}".to_json.html_safe %>);
+  addCities();
+
+  $(window).load(function() {
+    $("#c").val(<%= "#{@city}".to_json.html_safe %>);
+  });
+});
+
