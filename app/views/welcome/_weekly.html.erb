@@ -4,9 +4,9 @@
       <%= (Date.today + i).strftime("%-m/%-d") %>
     </div>
     <div class='panel-body'>
-      <img src='<%= @list[i][:icon] %>' /><br />
-      <span class='max'><%= @list[i][:max] %></span><br />
-      <span class='min'><%= @list[i][:min] %></span>
+      <img src='<%= @daily[i].icon %>' /><br />
+      <span class='max'><%= @daily[i].max %></span><br />
+      <span class='min'><%= @daily[i].min %></span>
     </div>
   </div>
 <% end %>

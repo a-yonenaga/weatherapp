@@ -1,100 +1,40 @@
-<%= render 'header' %>
-<form>
-  <select id='p' class='form-control' style='margin: 5px;'>
-  <% @pref_list.each do |pref| %>
-    <option value='<%= pref %>'><%= pref %></option>
-  <% end %>
-  </select>
-  <select id='c' style='margin: 5px;' class='form-control'>
-    <option>未選択</option>
-  </select>
-</form>
-<form style='margin-top: 8px;'>
-  <input type='button' value='現在地を取得' id='loc' style='border-radius: 4px;' />
-</form>
-<script>
-  function addCities(){
-    $.getJSON('https://geoapi.heartrails.com/api/json?jsonp=?',
-      {
-        method: 'getCities',
-        prefecture: p.value
-      }
-    )
-    .done(function(data) {
-      if (data.response) {
-        var result = data.response.location;
-        for(var i=0;i<result.length;i++){
-          let op = document.createElement("option");
-          op.value= result[i].city;
-          op.text = result[i].city;
-          document.getElementById("c").appendChild(op);
-        }
-      } else {
-        window.alert("APIの接続に失敗しました。");
-      }
-    });
-  }
-
-  $(function() {
-  $("#loc").click(function() {
-    if ( navigator.geolocation ){
-        navigator.geolocation.getCurrentPosition(
-        function(position){
-          coord = position.coords.latitude + ',' + position.coords.longitude;
-          window.location.href='../coord,' + coord;
-        },
-        function(err){
-          window.alert("位置情報が取得できませんでした。\n(" + err.code + "," + err.message + ")");
-        },
-        {
-          "enableHighAccuracy": false,
-          "timeout": 8000,
-          "maximumAge": 2000
-        }
-      );
-    } else {
-      window.alert('位置情報が取得できないブラウザです。');
-    }  
-  });
-
-  $('#p').change(function() {
-    sl = document.getElementById('c');
-    while(sl.lastChild){ sl.removeChild(sl.lastChild); }
-    op = document.createElement("option");
-    op.value = '未選択';
-    op.text = '未選択';
-    document.getElementById("c").appendChild(op);
+<div class='row'>
+  <form>
+    <select id='p' class='form-control' style='margin: 5px;'>
+    <% @pref_list.each do |pref| %>
+      <option value='<%= pref %>'><%= pref %></option>
+    <% end %>
+    </select>
+    <select id='c' style='margin: 5px;' class='form-control'>
+      <option>未選択</option>
+    </select>
+  </form>
+  <form style='margin-top: 8px;'>
+    <input type='button' value='現在地を取得(使用不可)' id='loc' style='border-radius: 4px;' />
+  </form>
+  <script>
+    $(function() {
+    $("#p").val(<%= "#{@pref}".to_json.html_safe %>);
     addCities();
-  });
 
-  $('#c').change(function() {
-    if (c.value != '未選択') {window.location.href='./city,' + p.value + ',' + c.value;} 
+    $(window).load(function() {
+      $("#c").val(<%= "#{@city}".to_json.html_safe %>);
+    });
   });
-  $("#p").val(<%= "#{@pref}".to_json.html_safe %>);
-  addCities();
-
-  $(window).load(function() {
-    $("#c").val(<%= "#{@city}".to_json.html_safe %>);
-  });
-});
-</script>
-<br />
-
-<div class='container-fluid'>
-  <div class='row'>
-    <div class='col-sm-7'>
-      <div class='container-fluid'>
-        <div class='row main'>
-          <%= render 'main' %>
-        </div>
-        <div class='row weekly'>
-          <%= render 'weekly' %>
-        </div>
-      </div>
+  </script>
+  <br />
+</div>
+<div class='row'>
+  <div class='col-sm-7'>
+    <div class='row main'>
+      <%= render 'main' %>
     </div>
-    <div class='col-sm-5'>
-      <%= render 'prec' %>
+    <div class='row'>
+      <%= render 'weekly' %>
     </div>
+  </div>
+  <div class='col-sm-5'>
+    <%= render 'prec' %>
   </div>
 </div>
 

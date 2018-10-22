@@ -3,51 +3,26 @@ require 'json'
 require 'date'
 
 class WelcomeController < ApplicationController
-  API_EP = "https://api.darksky.net/forecast/a7daf8b068803135c5f0b7eae0397955/"
   API_CITY_EP = "http://geoapi.heartrails.com/api/json"
-
+  DEFAULT_PREF = "埼玉県"
+  DEFAULT_CITY = "志木市"
 
   def index
-    pref = 0
-    File.open("/home/vagrant/weatherapp/public/pref.json") do |j|
-      pref = JSON.load(j)
-    end
-    @pref_list = pref['marker'].map{|pr| pr['pref']}
+    @pref_list = get_pref_list
 
-    @pref = (@pref || params[:p]) || '埼玉県'
-    @city = (@city || params[:c]) || '志木市'
+    @pref = (@pref || params[:p]) || DEFAULT_PREF 
+    @city = (@city || params[:c]) || DEFAULT_CITY
     @coord = get_coord(@pref, @city)
-    whole_data = get_data(*@coord)
 
-    data = whole_data['daily']['data']
-    @list = Array.new(7){|i| Hash.new}
-    (0..6).each do |i|
-      begin
-        @list[i][:icon] = "/icon/#{data[i]['icon']}.png"
-        @list[i][:prec] = "#{(data[i]['precipProbability']*100).to_f.round(1)}%"
-        @list[i][:max] = "#{data[i]['temperatureHigh'].round(1)}℃"
-        @list[i][:min] = "#{data[i]['temperatureLow'].round(1)}℃"
-      rescue
-        raise i.to_s + data[i].to_s
-      end
-    end
-
-    data = whole_data['hourly']['data']
-    @graph = Hash.new(8)
-    (0..7).each do |i|
-      @graph[Time.at(data[i*6]['time'].to_i).strftime("%d日 %H:00")] = data[i*6]['precipProbability'].round(1)
-    end
-
-    data = get_yest_data(*@coord)
-    @yest = Hash.new
-    @yest[:icon] = "/icon/#{data['icon']}.png"
-    @yest[:max] = "#{data['temperatureHigh'].round(1)}℃"
-    @yest[:min] = "#{data['temperatureLow'].round(1)}℃"
-
+    bundle = DataFromAPI.new(*@coord)
+    @daily = bundle.daily
+    @hourly = bundle.hourly
+    @yesterday = bundle.yesterday
+    
     render "welcome/index"
   end
 
-  def red
+  def redirect
     lat = params[:lat].to_f
     lon = params[:lon].to_f
     res = Faraday.get API_CITY_EP, {'method' => 'searchByGeoLocation', 'x' => lon, 'y' => lat}
@@ -61,8 +36,8 @@ class WelcomeController < ApplicationController
   end
 
   private
-
   def get_coord(p, c)
+    # 域内の町丁の緯度経度を平均して、区域の緯度経度とする。
     res = Faraday.get API_CITY_EP, {'method' => 'getTowns', 'city' => c}
     towns = JSON.parse(res.body)['response']
     lon = (towns['location'].map{|loc| loc['x'].to_f}.sum) / towns['location'].length
@@ -70,18 +45,67 @@ class WelcomeController < ApplicationController
     return [lat, lon]
   end
 
-  def get_data(lat, lon)
-    res = Faraday.get "#{API_EP}#{lat},#{lon}", {'units' => 'si'}
-    JSON.parse(res.body)
+  def get_pref_list
+    pref = 0
+    File.open("/home/vagrant/weatherapp/public/pref.json") do |j|
+      pref = JSON.load(j)
+    end
+    return pref['marker'].map{|pr| pr['pref']}
+  end
+end
+
+class DailyData
+  attr_reader :icon, :prec, :max, :min
+
+  def initialize(json)
+    @icon = "/icon/#{json['icon']}.png"
+    @prec = "#{(json['precipProbability']*100).to_f.round(1)}%"
+    @max = "#{json['temperatureHigh'].round(1)}℃"
+    @min = "#{json['temperatureLow'].round(1)}℃"
+  end
+end
+
+class HourlyData
+  attr_reader :time, :prec
+
+  def initialize(json)
+    @time = Time.at(json['time'].to_i).strftime("%d日 %H:00")
+    @prec = json['precipProbability'].round(1)
+  end
+end
+
+class DataFromAPI
+  API_EP = "https://api.darksky.net/forecast/a7daf8b068803135c5f0b7eae0397955/"
+  CURRENT = 1
+  YESTERDAY = 2
+  attr_reader :daily, :hourly, :yesterday
+
+  def initialize(lat, lon)
+    whole_data = fetch_data(lat, lon)
+    yesterday_data = fetch_data(lat, lon, YESTERDAY)
+    json_daily = whole_data['daily']['data']
+    json_hourly = whole_data['hourly']['data']
+
+    @daily = (0..6).map{|i| DailyData.new(json_daily[i])}
+    @hourly = (0..7).map{|i| HourlyData.new(json_hourly[i*6])}
+    @yesterday = DailyData.new(yesterday_data)
   end
 
-  def get_yest_data(lat, lon)
-    time_serial = Time.mktime(Time.now.year, Time.now.month, Time.now.day - 1).to_i
-    res = Faraday.get "#{API_EP}#{lat},#{lon},#{time_serial.to_s}", {'units' => 'si', 'exclue' => 'hourly'}
-    res = JSON.parse(res.body)['daily']['data']
-    res.each do |rec|
-      return rec if rec['time'].to_i == time_serial
+  private
+  def fetch_data(lat, lon, mode = CURRENT)
+    case mode
+    when CURRENT
+      return JSON.parse(Faraday.get("#{API_EP}#{lat},#{lon}", {'units' => 'si'}).body)
+    when YESTERDAY
+      time_serial = Time.mktime(Time.now.year, Time.now.month, Time.now.day - 1).to_i
+      whole = Faraday.get "#{API_EP}#{lat},#{lon},#{time_serial.to_s}", {'units' => 'si', 'exclue' => 'hourly'}
+      res = JSON.parse(whole.body)['daily']['data']
+      res.each do |rec|
+        return rec if rec['time'].to_i == time_serial
+      end
+    else
+      raise
     end
   end
-
 end
+

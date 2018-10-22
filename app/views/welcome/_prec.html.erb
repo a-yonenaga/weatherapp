@@ -1,7 +1,7 @@
 <div>
   <span class='prec'>
     <img src='/image/img02.png' class='prec-icon'/>
-    <%= @graph.values[0] * 100 %>%
+    <%= @hourly[0].prec * 100 %>%
   </span>
   （<%= Time.now.strftime("%-m/%-d %-H:00") %>）
 </div>
@@ -11,10 +11,10 @@
   var myChart = new Chart(ctx, {
       type: 'line',
       data: {
-      labels: <%= @graph.keys.to_json.html_safe %>,
+      labels: <%= @hourly.map(&:time).to_json.html_safe %>,
       datasets: [{
         label: "降水確率",
-        data: <%= @graph.values.map{|v| v*100} %>,
+        data: <%= @hourly.map(&:prec).map{|v| v*100} %>,
         backgroundColor: 'rgba(66, 139, 202, 1.0)',
         borderColor: 'rgba(66, 139, 202, 1.0)',
         fill: false
